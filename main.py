@@ -21,27 +21,27 @@ train_df = pd.read_csv("clipped_fraudTrain.csv")  # no need for all the data
 
 # getting prediction
 def predict(id, Amount, Time, Name, Merchant, CardNumber, TransitionNumber, Category):
-    global train_df
-    # train_df.loc[len(train_df)] = [
-    #     len(train_df),
-    #     Time,
-    #     CardNumber,
-    #     Merchant,
-    #     Category,
-    #     Amount,
-    #     Name,
-    #     "Elhakim",
-    #     TransitionNumber,
-    #     0,
-    # ]
+    train_df2 = train_df
+    train_df2.loc[len(train_df2)] = [
+        len(train_df2),
+        pd.to_datetime(Time),
+        int(CardNumber),
+        Merchant,
+        Category,
+        float(Amount),
+        Name,
+        "Elhakim",
+        TransitionNumber,
+        0,
+    ]
 
     # applying transformation
-    train_df = pd.get_dummies(train_df, columns=["category", "merchant"], dtype=int)
-    train_df["Time"] = pd.to_datetime(train_df["Time"])
+    train_df2 = pd.get_dummies(train_df2, columns=["category", "merchant"], dtype=int)
+    train_df["Time"] = pd.to_datetime(train_df2["Time"])
     average_amount_all = train_df["Amount"].mean()
-    train_df["Amount_diff_avg"] = train_df["Amount"] - average_amount_all
-    time_diff_seconds = train_df["Time"].diff().dt.total_seconds() % (24 * 3600)
-    train_df["Time_diff_prev_transaction"] = time_diff_seconds / 3600
+    train_df2["Amount_diff_avg"] = train_df2["Amount"] - average_amount_all
+    time_diff_seconds = train_df2["Time"].diff().dt.total_seconds() % (24 * 3600)
+    train_df2["Time_diff_prev_transaction"] = time_diff_seconds / 3600
     columns_to_drop = [
         "ID",
         "Time",
@@ -50,14 +50,13 @@ def predict(id, Amount, Time, Name, Merchant, CardNumber, TransitionNumber, Cate
         "lastName",
         "trans_num",
     ]
-    train_df.drop(columns=columns_to_drop, inplace=True)
-    train_df.dropna(inplace=True)
+    train_df2.drop(columns=columns_to_drop, inplace=True)
+    train_df2.dropna(inplace=True)
 
     # preparing the row for the model
-    r = np.array(train_df.iloc[1].drop("is_fraud"))
+    r = np.array(train_df2.iloc[-1].drop("is_fraud"))
     r = r.reshape(1, -1)
     # getting prediction
-
     return loaded_svm_model.predict(r)
 
 
