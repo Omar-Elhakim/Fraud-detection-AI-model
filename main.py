@@ -13,72 +13,52 @@ def load_model(filename):
     return loaded_svm_model
 
 
-filename = "svm_model.pth"
-loaded_svm_model = load_model(filename)
+d = {
+    "misc_net": 9,
+    "grocery_pos": 4,
+    "entertainment": 0,
+    "gas_transport": 2,
+    "misc_pos": 10,
+    "grocery_net": 3,
+    "shopping_net": 12,
+    "shopping_pos": 13,
+    "food_dining": 1,
+    "personal_care": 11,
+    "health_fitness": 5,
+    "travel": 14,
+    "kids_pets": 8,
+    "home": 6,
+    "kids_": 7,
+}
+average = 70.25615704174125
+filename = "../rf_model.pth"
+loaded_rf_model = load_model(filename)
 # load the data
-train_df = pd.read_csv("clipped_fraudTrain.csv")  # no need for all the data
+train_df = pd.read_csv("../fraudTrain.csv")  # no need for all the data
 
 
 # getting prediction
 def predict(id, Amount, Time, Name, Merchant, CardNumber, TransitionNumber, Category):
-    train_df2 = train_df
-    train_df2.loc[len(train_df2)] = [
-        len(train_df2),
-        pd.to_datetime(Time),
-        int(CardNumber),
-        Merchant,
-        Category,
-        float(Amount),
-        Name,
-        "Elhakim",
-        TransitionNumber,
-        0,
-    ]
-
-    # applying transformation
-    train_df2 = pd.get_dummies(train_df2, columns=["category", "merchant"], dtype=int)
-    train_df["Time"] = pd.to_datetime(train_df2["Time"])
-    average_amount_all = train_df["Amount"].mean()
-    train_df2["Amount_diff_avg"] = train_df2["Amount"] - average_amount_all
-    time_diff_seconds = train_df2["Time"].diff().dt.total_seconds() % (24 * 3600)
-    train_df2["Time_diff_prev_transaction"] = time_diff_seconds / 3600
-    columns_to_drop = [
-        "ID",
-        "Time",
-        "Card Number",
-        "firstName",
-        "lastName",
-        "trans_num",
-    ]
-    train_df2.drop(columns=columns_to_drop, inplace=True)
-    train_df2.dropna(inplace=True)
-
-    # preparing the row for the model
-    r = np.array(train_df2.iloc[-1].drop("is_fraud"))
+    # category	Amount	is_fraud	Amount_diff_avg	Hour
+    r = np.array(
+        [d[Category], float(Amount), float(Amount) - average, pd.to_datetime(Time).hour]
+    )
     r = r.reshape(1, -1)
     # getting prediction
-    return loaded_svm_model.predict(r)
+    return loaded_rf_model.predict(r)
 
 
 # saving inputs in variables&showing output
 def Save_output():
 
     id = entry1.get()
-    print("Entry1 input:", id)
     Amount = entry2.get()
-    print("Entry2 input:", Amount)
     Time = entry3.get()
-    print("Entry3 input:", Time)
     Name = entry4.get()
-    print("Entry4 input:", Name)
     Merchant = entry5.get()
-    print("Entry5 input:", Merchant)
     CardNumber = entry6.get()
-    print("Entry6 input:", CardNumber)
     TransitionNumber = entry7.get()
-    print("Entry7 input:", TransitionNumber)
     Category = entry8.get()
-    print("Entry8 input:", Category)
 
     # showing output
     messagebox.showinfo(
